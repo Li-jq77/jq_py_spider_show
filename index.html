@@ -1,400 +1,961 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>58同城招聘数据爬虫与分析系统 · 项目作品集</title>
+<meta name="description" content="里脊球的 Python 数据采集、清洗、挖掘与可视化案例。">
+<title>里脊球 · Python 数据采集与挖掘</title>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
 
 :root {
-    --bg: #0f1117;
-    --surface: #1a1d28;
-    --surface2: #232738;
-    --border: #2e3348;
-    --text: #e4e6f0;
-    --text2: #9aa0b4;
-    --accent: #6c8cff;
-    --accent2: #4dc9f6;
-    --green: #34d399;
-    --amber: #fbbf24;
-    --coral: #f472b6;
-    --radius: 12px;
+    --page: #eef1ee;
+    --surface: #ffffff;
+    --surface-soft: #f6f8f6;
+    --ink: #172527;
+    --ink-2: #556562;
+    --line: #d8e0dc;
+    --brand: #0f766e;
+    --brand-dark: #0a554f;
+    --brand-soft: #ddf0ea;
+    --accent: #cf6f2c;
+    --accent-soft: #fbe9da;
+    --gold: #b98524;
+    --shadow: 0 12px 34px rgba(25, 48, 47, .08);
+    --max: 1160px;
 }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scroll-padding-top: 92px; }
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.7;
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
     -webkit-font-smoothing: antialiased;
 }
 
-nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 48px; height: 64px;
-    background: rgba(15,17,23,.85); backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border);
-}
-nav .logo { font-weight: 700; font-size: 15px; letter-spacing: .3px; color: var(--text); }
-nav .logo span { color: var(--accent); }
-nav a { color: var(--text2); text-decoration: none; font-size: 14px; margin-left: 28px; transition: color .2s; }
-nav a:hover { color: var(--text); }
+img { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; }
+::selection { background: #c9e7df; color: var(--ink); }
 
-.hero {
-    padding: 140px 48px 80px; max-width: 1100px; margin: 0 auto;
+.nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 60;
+    background: rgba(247, 249, 247, .9);
+    border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(16px);
 }
-.hero-badge {
-    display: inline-block; padding: 4px 14px; border-radius: 20px;
-    background: rgba(108,140,255,.15); color: var(--accent);
-    font-size: 13px; font-weight: 600; margin-bottom: 20px;
-    border: 1px solid rgba(108,140,255,.25);
+.nav-inner {
+    width: min(100%, var(--max));
+    height: 72px;
+    margin: 0 auto;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+}
+.brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: var(--brand);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 14px;
+    flex: none;
+}
+.brand-text { min-width: 0; line-height: 1.2; }
+.brand-text strong { display: block; font-size: 15px; font-weight: 800; }
+.brand-text small { display: block; margin-top: 2px; color: var(--ink-2); font-size: 11px; }
+.nav-links { display: flex; align-items: center; gap: 4px; }
+.nav-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 13px;
+    border-radius: 8px;
+    color: var(--ink-2);
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.nav-links a:hover,
+.nav-links a:focus-visible { color: var(--brand); background: var(--brand-soft); }
+.menu-btn {
+    display: none;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+.menu-btn svg { width: 18px; height: 18px; }
+
+.hero { padding: 132px 0 0; }
+.hero-inner {
+    width: min(100%, var(--max));
+    margin: 0 auto;
+    padding: 38px 28px 52px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(360px, .92fr);
+    gap: 64px;
+    align-items: center;
+}
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 18px;
+    color: var(--brand);
+    font-size: 13px;
+    font-weight: 800;
+}
+.eyebrow::before {
+    content: "";
+    width: 18px;
+    height: 2px;
+    background: var(--accent);
 }
 .hero h1 {
-    font-size: 42px; font-weight: 800; line-height: 1.2; margin-bottom: 20px;
-    letter-spacing: -0.5px;
+    margin: 0;
+    font-size: 66px;
+    line-height: 1.08;
+    font-weight: 850;
+    letter-spacing: 0;
 }
-.hero h1 span { background: linear-gradient(135deg,var(--accent),var(--accent2)); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.hero p {
-    font-size: 17px; color: var(--text2); max-width: 560px; margin-bottom: 32px;
+.hero-role {
+    margin: 12px 0 20px;
+    color: var(--brand-dark);
+    font-size: 19px;
+    font-weight: 750;
+}
+.hero-lead {
+    margin: 0 0 28px;
+    color: var(--ink-2);
+    font-size: 17px;
+    max-width: 590px;
+}
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 750;
+    cursor: pointer;
+}
+.btn-primary {
+    background: var(--brand);
+    color: #fff;
+    border: 1px solid var(--brand);
+}
+.btn-primary:hover { background: var(--brand-dark); }
+.btn-ghost {
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line);
+}
+.btn-ghost:hover { border-color: var(--brand); color: var(--brand); }
+.btn svg { width: 16px; height: 16px; margin-left: 8px; }
+
+.hero-figure {
+    margin: 0;
+    padding: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+.hero-figure img {
+    width: 100%;
+    max-height: 410px;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 4px;
+}
+.hero-figure figcaption {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 5px 3px;
+    color: var(--ink-2);
+    font-size: 13px;
+    font-weight: 600;
+}
+.hero-figure figcaption::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex: none;
 }
 
-.tech-stack { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 36px; }
-.tech-tag {
-    padding: 5px 14px; border-radius: 6px; font-size: 13px; font-weight: 500;
-    background: var(--surface2); border: 1px solid var(--border); color: var(--text2);
+.quick-stats {
+    width: min(100%, var(--max));
+    margin: 0 auto;
+    padding: 0 28px 86px;
 }
-.tech-tag.primary { background: rgba(108,140,255,.12); border-color: rgba(108,140,255,.3); color: var(--accent); }
+.quick-stats-inner {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    overflow: hidden;
+    background: var(--ink);
+    color: #fff;
+    border-radius: 8px;
+}
+.stat-cell { padding: 24px 26px; border-left: 1px solid rgba(255, 255, 255, .12); }
+.stat-cell:first-child { border-left: 0; }
+.stat-value { font-size: 29px; font-weight: 800; color: #f3c782; line-height: 1.2; }
+.stat-label { margin-top: 4px; color: #b9cbc7; font-size: 13px; }
 
-.hero-links { display: flex; gap: 16px; }
-.hero-links a {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600;
-    text-decoration: none; transition: all .2s;
+.section {
+    width: min(100%, var(--max));
+    margin: 0 auto;
+    padding: 0 28px 92px;
 }
-.hero-links .btn-primary {
-    background: var(--accent); color: #fff;
+.section-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 18px;
+    align-items: start;
+    margin-bottom: 38px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line);
 }
-.hero-links .btn-primary:hover { background: #5a7ae8; transform: translateY(-1px); }
-.hero-links .btn-outline {
-    border: 1px solid var(--border); color: var(--text);
+.section-no {
+    display: inline-grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 8px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    font-size: 14px;
+    font-weight: 800;
 }
-.hero-links .btn-outline:hover { background: var(--surface); }
+.section-head h2 {
+    margin: 0 0 7px;
+    font-size: 31px;
+    line-height: 1.28;
+    letter-spacing: 0;
+}
+.section-desc {
+    margin: 0;
+    max-width: 700px;
+    color: var(--ink-2);
+    font-size: 16px;
+}
 
-.stats-bar {
-    display: grid; grid-template-columns: repeat(4,1fr); gap: 1px;
-    max-width: 1100px; margin: 0 auto 60px; padding: 0 48px;
-    background: var(--border); border-radius: var(--radius); overflow: hidden;
+.story-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr);
+    gap: 52px;
+    align-items: start;
 }
-.stat-item {
-    background: var(--surface); padding: 28px 24px; text-align: center;
+.story-copy p { margin: 0 0 18px; color: var(--ink-2); font-size: 16px; }
+.story-copy p:last-child { margin-bottom: 0; }
+.story-copy strong { color: var(--ink); font-weight: 750; }
+.fact-list { margin: 4px 0 0; }
+.fact-row {
+    display: grid;
+    grid-template-columns: 118px 1fr;
+    gap: 18px;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--line);
 }
-.stat-item .num { font-size: 32px; font-weight: 800; color: var(--accent); }
-.stat-item .label { font-size: 13px; color: var(--text2); margin-top: 4px; }
+.fact-row dt { color: var(--ink-2); font-size: 14px; }
+.fact-row dd { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
 
-section { max-width: 1100px; margin: 0 auto; padding: 60px 48px; }
-.section-label {
-    display: inline-block; font-size: 13px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 1px; color: var(--accent); margin-bottom: 8px;
+.process {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 54px;
 }
-section h2 {
-    font-size: 28px; font-weight: 700; margin-bottom: 16px;
+.step {
+    position: relative;
+    padding: 24px 22px 22px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(24, 49, 46, .05);
 }
-section h2 + p { color: var(--text2); font-size: 16px; max-width: 680px; margin-bottom: 40px; }
+.step::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+    background: var(--accent);
+}
+.step:nth-child(2)::before { background: var(--brand); }
+.step:nth-child(3)::before { background: var(--gold); }
+.step:nth-child(4)::before { background: #2f6fed; }
+.step-num {
+    display: inline-block;
+    margin-bottom: 14px;
+    color: var(--brand);
+    font-size: 12px;
+    font-weight: 800;
+}
+.step h3 { margin: 0 0 7px; font-size: 17px; letter-spacing: 0; }
+.step p { margin: 0; color: var(--ink-2); font-size: 14px; }
 
-.features-grid {
-    display: grid; grid-template-columns: repeat(3,1fr); gap: 20px;
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
 }
-.feature-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 28px; transition: border-color .2s, transform .2s;
+.chart-card {
+    min-width: 0;
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
 }
-.feature-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-.feature-card .icon {
-    width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
-    font-size: 18px; margin-bottom: 16px;
+.chart-card.wide { grid-column: 1 / -1; }
+.chart-media { padding: 10px; background: #fff; }
+.chart-media img {
+    width: 100%;
+    max-height: 640px;
+    height: auto;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 4px;
+    cursor: zoom-in;
 }
-.feature-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-.feature-card p { font-size: 14px; color: var(--text2); line-height: 1.6; }
+.chart-report {
+    padding: 18px 22px 20px;
+    background: var(--surface-soft);
+    border-top: 1px solid var(--line);
+}
+.chart-report-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 9px;
+}
+.chart-number {
+    color: var(--brand);
+    font-size: 12px;
+    font-weight: 800;
+}
+.report-label {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 9px;
+    border-radius: 4px;
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+    font-size: 11px;
+    font-weight: 800;
+}
+.chart-report h3 {
+    margin: 0 0 7px;
+    font-size: 18px;
+    line-height: 1.45;
+    letter-spacing: 0;
+}
+.chart-report p {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: 14px;
+}
+.chart-report p strong { color: var(--ink); font-weight: 750; }
 
-.gallery-grid {
-    display: grid; grid-template-columns: repeat(2,1fr); gap: 24px;
+.insight-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
 }
-.gallery-item {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    overflow: hidden; transition: border-color .2s;
+.insight-card {
+    position: relative;
+    padding: 24px 22px 22px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(24, 49, 46, .04);
 }
-.gallery-item:hover { border-color: var(--accent); }
-.gallery-item.full { grid-column: span 2; }
-.gallery-item img {
-    width: 100%; display: block; cursor: pointer;
-    transition: opacity .2s;
+.insight-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--brand);
+    border-radius: 0 0 3px 3px;
 }
-.gallery-item img:hover { opacity: .92; }
-.gallery-item .caption {
-    padding: 16px 20px;
+.insight-card:nth-child(2)::before,
+.insight-card:nth-child(5)::before { background: var(--accent); }
+.insight-card:nth-child(3)::before,
+.insight-card:nth-child(6)::before { background: var(--gold); }
+.insight-tag {
+    display: inline-block;
+    padding: 3px 9px;
+    margin-bottom: 14px;
+    border-radius: 4px;
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+    font-size: 12px;
+    font-weight: 700;
 }
-.gallery-item .caption h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-.gallery-item .caption p { font-size: 13px; color: var(--text2); }
+.insight-card h3 { margin: 0 0 8px; font-size: 17px; line-height: 1.4; letter-spacing: 0; }
+.insight-card p { margin: 0; color: var(--ink-2); font-size: 14px; }
 
-.findings-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;
+.tool-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 24px; }
+.tool-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--ink-2);
+    font-size: 13px;
+    font-weight: 650;
 }
-.finding-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 24px;
+.tool-pill strong { color: var(--brand); margin-right: 5px; }
+.module-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
 }
-.finding-card .tag {
-    display: inline-block; padding: 2px 10px; border-radius: 4px;
-    font-size: 12px; font-weight: 600; margin-bottom: 10px;
+.module-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 18px;
+    align-items: start;
+    padding: 22px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
 }
-.finding-card h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-.finding-card p { font-size: 14px; color: var(--text2); }
+.module-index {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: var(--surface-soft);
+    color: var(--brand);
+    font-size: 12px;
+    font-weight: 800;
+}
+.module-card h3 { margin: 0 0 5px; font-size: 16px; letter-spacing: 0; }
+.module-card code {
+    display: inline-block;
+    margin: 0 0 8px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: #e9efec;
+    color: var(--brand-dark);
+    font-family: "SF Mono", "Cascadia Mono", Consolas, monospace;
+    font-size: 12px;
+}
+.module-card p { margin: 0; color: var(--ink-2); font-size: 14px; }
 
-.code-tree {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 24px 32px; font-family: "SF Mono", "Fira Code", "Consolas", monospace; font-size: 13px;
-    line-height: 2; overflow-x: auto;
+.footer {
+    padding: 60px 28px;
+    background: var(--ink);
+    color: #d6e3df;
+    text-align: center;
 }
-.code-tree .tree-node { display: block; white-space: nowrap; color: var(--text2); }
-.code-tree .tree-node .name { color: var(--accent2); }
-.code-tree .tree-node .comment { color: var(--text2); opacity: .6; }
-.code-tree .tree-node.dir > .name { color: var(--amber); }
-
-footer {
-    text-align: center; padding: 48px; border-top: 1px solid var(--border);
-    color: var(--text2); font-size: 13px;
+.footer-name { margin: 0 0 6px; color: #fff; font-size: 24px; font-weight: 850; letter-spacing: 0; }
+.footer-role { margin: 0 0 22px; color: #9eb6b1; font-size: 15px; }
+.footer-mark {
+    width: 44px;
+    height: 3px;
+    margin: 0 auto 20px;
+    background: var(--accent);
+    border-radius: 2px;
 }
+.footer small { color: #78928d; font-size: 12px; }
 
 .lightbox {
-    display: none; position: fixed; z-index: 200; inset: 0;
-    background: rgba(0,0,0,.9); padding: 32px; cursor: zoom-out;
-    align-items: center; justify-content: center;
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    background: rgba(12, 22, 24, .94);
 }
-.lightbox.active { display: flex; }
-.lightbox img { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px; }
-.lightbox .close-btn {
-    position: absolute; top: 16px; right: 24px; color: #fff; font-size: 28px;
-    cursor: pointer; background: none; border: none;
+.lightbox.open { display: flex; }
+.lightbox img {
+    max-width: min(94vw, 1440px);
+    max-height: 92vh;
+    object-fit: contain;
+    background: #fff;
+    padding: 12px;
+    border-radius: 8px;
+}
+.lightbox button {
+    position: absolute;
+    top: 18px;
+    right: 24px;
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(255, 255, 255, .28);
+    border-radius: 50%;
+    background: transparent;
+    color: #fff;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
 }
 
-@media (max-width: 800px) {
-    nav { padding: 0 20px; }
-    .hero { padding: 100px 20px 40px; }
-    .hero h1 { font-size: 28px; }
-    .stats-bar { grid-template-columns: repeat(2,1fr); padding: 0 20px; }
-    section { padding: 40px 20px; }
-    .features-grid { grid-template-columns: 1fr; }
-    .gallery-grid { grid-template-columns: 1fr; }
-    .gallery-item.full { grid-column: span 1; }
-    section h2 { font-size: 22px; }
+@media (max-width: 980px) {
+    .hero-inner { grid-template-columns: 1fr; gap: 34px; }
+    .hero-figure img { max-height: none; }
+    .story-layout { grid-template-columns: 1fr; gap: 24px; }
+    .process { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid { grid-template-columns: 1fr; }
+    .chart-card.wide { grid-column: auto; }
+    .insight-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 720px) {
+    .nav-inner { height: 64px; padding: 0 16px; }
+    .brand-text small { display: none; }
+    .menu-btn { display: inline-flex; }
+    .nav-links {
+        position: absolute;
+        top: 72px;
+        right: 14px;
+        left: 14px;
+        display: grid;
+        gap: 4px;
+        padding: 10px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px);
+        transition: opacity .18s, transform .18s, visibility .18s;
+    }
+    .nav-links.open { opacity: 1; visibility: visible; transform: translateY(0); }
+    .nav-links a { padding: 0 12px; }
+    .hero { padding-top: 96px; }
+    .hero-inner { padding: 30px 16px 42px; gap: 30px; }
+    .hero h1 { font-size: 46px; }
+    .hero-role { font-size: 17px; }
+    .hero-lead { font-size: 16px; }
+    .quick-stats { padding: 0 16px 64px; }
+    .quick-stats-inner { grid-template-columns: repeat(2, 1fr); }
+    .stat-cell { border-left: 0; border-top: 1px solid rgba(255, 255, 255, .12); }
+    .stat-cell:nth-child(odd) { border-right: 1px solid rgba(255, 255, 255, .12); }
+    .stat-cell:nth-child(1), .stat-cell:nth-child(2) { border-top: 0; }
+    .section { padding: 0 16px 68px; }
+    .section-head { grid-template-columns: 44px 1fr; gap: 14px; }
+    .section-no { width: 44px; height: 44px; }
+    .section-head h2 { font-size: 25px; }
+    .process { grid-template-columns: 1fr; margin-top: 38px; }
+    .chart-grid { gap: 16px; }
+    .chart-report { padding: 16px 18px 18px; }
+    .chart-report h3 { font-size: 17px; }
+    .insight-grid { grid-template-columns: 1fr; }
+    .module-grid { grid-template-columns: 1fr; }
+    .footer { padding: 48px 20px; }
+}
+
+@media (max-width: 420px) {
+    .hero h1 { font-size: 38px; }
+    .quick-stats-inner { grid-template-columns: 1fr 1fr; }
 }
 </style>
 </head>
 <body>
 
-<nav>
-    <div class="logo">58<span>Jobs</span> Analyzer</div>
-    <div>
-        <a href="#overview">概览</a>
-        <a href="#charts">可视化</a>
-        <a href="#findings">分析发现</a>
-        <a href="#structure">项目结构</a>
+<nav class="nav" aria-label="主导航">
+    <div class="nav-inner">
+        <a class="brand" href="#top">
+            <span class="brand-mark">里</span>
+            <span class="brand-text"><strong>里脊球</strong><small>Python 数据采集与挖掘</small></span>
+        </a>
+        <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-label="展开导航菜单">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                <path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path>
+            </svg>
+        </button>
+        <div class="nav-links" id="navLinks">
+            <a href="#overview">案例概览</a>
+            <a href="#charts">可视化</a>
+            <a href="#insights">分析发现</a>
+            <a href="#tech">技术方案</a>
+        </div>
     </div>
 </nav>
 
-<header class="hero" id="overview">
-    <div class="hero-badge">Python &middot; Scrapy &middot; Data Analysis</div>
-    <h1>58同城招聘数据<br><span>爬虫与分析系统</span></h1>
-    <p>
-        一个基于 Scrapy 框架的分布式爬虫项目，从 58 同城（南昌站）抓取全站招聘信息，
-        结合 Pandas、NumPy、SciPy 进行数据清洗与统计分析，并通过 Matplotlib 生成
-        5 张专业可视化图表，完成对招聘市场薪资结构的深度洞察。
-    </p>
-    <div class="tech-stack">
-        <span class="tech-tag primary">Python 3</span>
-        <span class="tech-tag primary">Scrapy</span>
-        <span class="tech-tag">Matplotlib</span>
-        <span class="tech-tag">NumPy</span>
-        <span class="tech-tag">Pandas</span>
-        <span class="tech-tag">SciPy</span>
-        <span class="tech-tag">XPath</span>
-        <span class="tech-tag">JSON</span>
-    </div>
-    <div class="hero-links">
-        <a href="#charts" class="btn-primary">查看可视化 &darr;</a>
-        <a href="#structure" class="btn-outline">项目结构</a>
-    </div>
-</header>
+<main id="top">
+    <header class="hero">
+        <div class="hero-inner">
+            <div class="hero-copy">
+                <p class="eyebrow">Python 数据采集与挖掘案例</p>
+                <h1>里脊球</h1>
+                <p class="hero-role">把招聘数据整理成能回答问题的洞察</p>
+                <p class="hero-lead">本案例以 58 同城南昌站的公开招聘信息为研究对象，使用 Python 完成数据采集、字段清洗、统计挖掘与可视化，观察不同岗位和人群背后的薪资结构。</p>
+                <div class="hero-actions">
+                    <a class="btn btn-primary" href="#charts">查看可视化图表
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg>
+                    </a>
+                    <a class="btn btn-ghost" href="#insights">看分析结论</a>
+                </div>
+            </div>
+            <figure class="hero-figure">
+                <img src="assets/salary_kde_distribution.png" alt="薪资分布核密度估计图，展示不同类别岗位的薪资概率密度曲线">
+                <figcaption>项目可视化产出 · 薪资分布核密度估计图</figcaption>
+            </figure>
+        </div>
+    </header>
 
-<div class="stats-bar">
-    <div class="stat-item"><div class="num">~1,000</div><div class="label">抓取职位</div></div>
-    <div class="stat-item"><div class="num">5</div><div class="label">可视化图表</div></div>
-    <div class="stat-item"><div class="num">4</div><div class="label">分析维度</div></div>
-    <div class="stat-item"><div class="num">1</div><div class="label">分析报告</div></div>
-</div>
-
-<section>
-    <div class="section-label">Features</div>
-    <h2>项目核心功能</h2>
-    <p>从数据采集到可视化分析，完整的数据处理流水线。</p>
-    <div class="features-grid">
-        <div class="feature-card">
-            <div class="icon" style="background:rgba(108,140,255,.15);color:var(--accent);">&#x1F50D;</div>
-            <h3>网页爬虫</h3>
-            <p>基于 Scrapy 框架，自定义 XPath 提取职位标题、薪资、地点、公司、任职要求，支持多页面爬取与防重复。</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon" style="background:rgba(52,211,153,.15);color:var(--green);">&#x1F9F0;</div>
-            <h3>数据清洗</h3>
-            <p>HTML 实体解码、字段标准化、薪资范围解析，将原始非结构化数据转化为可分析的表格数据。</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon" style="background:rgba(251,191,36,.15);color:var(--amber);">&#x1F4CA;</div>
-            <h3>探索性分析</h3>
-            <p>按行业、学历、经验、地区 4 个维度分析薪资分布，计算均值、中位数、标准差等统计量。</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon" style="background:rgba(244,114,182,.15);color:var(--coral);">&#x1F4F7;</div>
-            <h3>可视化图表</h3>
-            <p>生成气泡图、核密度估计图、阶梯图、雷达图、箱线图 5 种可视化，多角度呈现薪资结构。</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon" style="background:rgba(77,201,246,.15);color:var(--accent2);">&#x1F4DD;</div>
-            <h3>去重管线</h3>
-            <p>基于标题+薪资+公司+地点的唯一标识去重 Pipeline，确保数据质量与统计准确性。</p>
-        </div>
-        <div class="feature-card">
-            <div class="icon" style="background:rgba(168,85,247,.15);color:#a855f7;">&#x1F4E6;</div>
-            <h3>结构化存储</h3>
-            <p>JSON Lines 格式存储，每条记录独立一行，方便增量追加与后续导入各种分析工具。</p>
+    <div class="quick-stats" aria-label="案例数据概览">
+        <div class="quick-stats-inner">
+            <div class="stat-cell"><div class="stat-value">900+</div><div class="stat-label">采集职位样本</div></div>
+            <div class="stat-cell"><div class="stat-value">5</div><div class="stat-label">张可视化图表</div></div>
+            <div class="stat-cell"><div class="stat-value">4</div><div class="stat-label">个分析维度</div></div>
+            <div class="stat-cell"><div class="stat-value">1</div><div class="stat-label">条完整数据链路</div></div>
         </div>
     </div>
-</section>
 
-<section id="charts">
-    <div class="section-label">Visualization</div>
-    <h2>可视化图表展示</h2>
-    <p>5 张专业数据可视化图表，全方位呈现南昌招聘市场的薪资结构。</p>
-
-    <div class="gallery-grid">
-        <div class="gallery-item full">
-            <img src="assets/salary_kde_distribution.png" alt="薪资分布核密度估计图" onclick="openLightbox(this.src)">
-            <div class="caption">
-                <h4>薪资分布核密度估计图</h4>
-                <p>展示不同学历/类别的薪资概率密度曲线，标注均值位置。颜色和线型区分不同群体，填充区域直观反映分布形态。附整体统计摘要。</p>
+    <section class="section" id="overview" aria-labelledby="overviewTitle">
+        <div class="section-head">
+            <span class="section-no">01</span>
+            <div>
+                <h2 id="overviewTitle">案例概览</h2>
+                <p class="section-desc">从公开招聘页面出发，完成一场从非结构化文本到薪资洞察的数据处理。</p>
             </div>
         </div>
-        <div class="gallery-item">
-            <img src="assets/salary_bubble_chart.png" alt="行业薪资分布气泡图" onclick="openLightbox(this.src)">
-            <div class="caption">
-                <h4>行业薪资分布气泡图</h4>
-                <p>X 轴为岗位数量，Y 轴为平均薪资，气泡大小代表薪资标准差，颜色区分行业。快速识别高薪低波动的优质行业。</p>
+        <div class="story-layout">
+            <div class="story-copy">
+                <p>这个案例不是只做简单的数据下载，而是把页面中的非结构化信息转换成可以回答问题的数据。采集只是起点，更重要的环节在清洗、统计与挖掘。</p>
+                <p>我提取了职位、薪资、公司、地区和任职要求等字段，统一薪资格式并完成重复判断，再按<strong>行业、学历、经验、地区</strong>四个维度展开分析，最终形成一套可复用的数据采集与挖掘方法。</p>
             </div>
+            <dl class="fact-list">
+                <div class="fact-row"><dt>研究对象</dt><dd>南昌公开招聘信息</dd></div>
+                <div class="fact-row"><dt>样本口径</dt><dd>938 条职位记录</dd></div>
+                <div class="fact-row"><dt>核心问题</dt><dd>不同岗位的薪资结构如何</dd></div>
+                <div class="fact-row"><dt>产出形式</dt><dd>图表、结论与分析报告</dd></div>
+            </dl>
         </div>
-        <div class="gallery-item">
-            <img src="assets/experience_salary_ladder.png" alt="经验-薪资增长阶梯图" onclick="openLightbox(this.src)">
-            <div class="caption">
-                <h4>经验/学历-薪资增长阶梯图</h4>
-                <p>阶梯图+增长率柱状图双轴组合。主轴展示平均薪资阶梯线，辅轴以红色柱状图标注环比增长率。揭示薪资跃升节点。</p>
-            </div>
+        <div class="process">
+            <article class="step">
+                <span class="step-num">01 / 采集</span>
+                <h3>数据采集</h3>
+                <p>对招聘页面做结构化访问，抽取职位、薪资、地区、公司与任职要求等关键字段。</p>
+            </article>
+            <article class="step">
+                <span class="step-num">02 / 清洗</span>
+                <h3>数据清洗</h3>
+                <p>修复 HTML 字符、解析薪资范围并统一字段格式，为统计准备好干净样本。</p>
+            </article>
+            <article class="step">
+                <span class="step-num">03 / 挖掘</span>
+                <h3>数据挖掘</h3>
+                <p>围绕学历、经验、行业与地区计算薪资统计量，找到隐藏的结构性差异。</p>
+            </article>
+            <article class="step">
+                <span class="step-num">04 / 呈现</span>
+                <h3>可视化</h3>
+                <p>用 5 张图表把复杂分布转成直观对比，让结论更容易被看见。</p>
+            </article>
         </div>
-        <div class="gallery-item">
-            <img src="assets/location_salary_radar.png" alt="地区薪资特征雷达图" onclick="openLightbox(this.src)">
-            <div class="caption">
-                <h4>地区薪资特征雷达图</h4>
-                <p>多维度（25 分位、中位数、75 分位、90 分位、平均值）对比不同地区的薪资特征。标准化映射到 0-1。</p>
-            </div>
-        </div>
-        <div class="gallery-item">
-            <img src="assets/salary_boxplot_combined.png" alt="薪资分布箱线图+散点组合图" onclick="openLightbox(this.src)">
-            <div class="caption">
-                <h4>薪资分布箱线图+散点组合图</h4>
-                <p>箱线图展示 25%-75% 分位数区间与中位数，叠加抖动散点图显示全部原始数据点。配色柔和，附统计面板。</p>
-            </div>
-        </div>
-    </div>
-</section>
+    </section>
 
-<section id="findings">
-    <div class="section-label">Analysis Report</div>
-    <h2>分析发现</h2>
-    <p>基于南昌站 ~1000 条招聘数据的多维度薪资分析，总结出以下核心发现。</p>
-    <div class="findings-grid">
-        <div class="finding-card">
-            <div class="tag" style="background:rgba(251,191,36,.15);color:var(--amber);">入门岗位</div>
-            <h4>低门槛高收入岗位</h4>
-            <p>外卖骑手（6k-9.5k）、网约车司机（8k-10k）、娱乐场所店员（8k-12k）等不限学历经验的岗位提供有竞争力的薪资，适合快速入职。</p>
+    <section class="section" id="charts" aria-labelledby="chartsTitle">
+        <div class="section-head">
+            <span class="section-no">02</span>
+            <div>
+                <h2 id="chartsTitle">可视化洞察</h2>
+                <p class="section-desc">五张图表从分布、行业、经验、地区和样本细节五个角度呈现数据。</p>
+            </div>
         </div>
-        <div class="finding-card">
-            <div class="tag" style="background:rgba(52,211,153,.15);color:var(--green);">技能型</div>
-            <h4>技能溢价明显</h4>
-            <p>足疗师/按摩师（10k-15k）、美容师（6k-12k）、技术工程师（8k-15k）等技能型岗位薪资显著高于普通文职，技能溢价可达 50%-100%。</p>
-        </div>
-        <div class="finding-card">
-            <div class="tag" style="background:rgba(108,140,255,.15);color:var(--accent);">办公室</div>
-            <h4>文职岗薪资稳定但偏低</h4>
-            <p>行政专员（4k-6k）、客服（3.5k-8k）、文员（3k-5k）等办公室岗位薪资区间较窄，但福利完善、工作稳定，五险一金覆盖率高。</p>
-        </div>
-        <div class="finding-card">
-            <div class="tag" style="background:rgba(244,114,182,.15);color:var(--coral);">管理岗</div>
-            <h4>管理/技术岗薪资天花板高</h4>
-            <p>销售经理（10k-21k）、驻店总经理（10k-15k）、技术工程师（8k-15k）代表市场薪资天花板，需 3-5 年经验积累。</p>
-        </div>
-        <div class="finding-card">
-            <div class="tag" style="background:rgba(77,201,246,.15);color:var(--accent2);">灵活就业</div>
-            <h4>灵活就业岗位兴起</h4>
-            <p>居家游戏主播（5k-8k）、陪诊师（5k-8k）、台球助教（8k-12k）等新型灵活就业岗位快速增加，迎合年轻求职者偏好。</p>
-        </div>
-        <div class="finding-card">
-            <div class="tag" style="background:rgba(168,85,247,.15);color:#a855f7;">数据洞察</div>
-            <h4>求职提示</h4>
-            <p>薪资含绩效/补贴，需确认保底金额；五险一金、包吃住、可预支是热门福利；正规岗位无入职费用，警惕缴费陷阱。</p>
-        </div>
-    </div>
-</section>
 
-<section id="structure">
-    <div class="section-label">Code Structure</div>
-    <h2>项目结构</h2>
-    <p>Scrapy 标准项目结构，模块化设计，层次清晰。</p>
-    <div class="code-tree">
-        <span class="tree-node dir"><span class="name">fiftyeight_jobs/</span></span>
-        <span class="tree-node" style="padding-left:24px;"><span class="name">scrapy.cfg</span>  <span class="comment">/* 部署配置 */</span></span>
-        <span class="tree-node dir" style="padding-left:24px;"><span class="name">fiftyeightjobs/</span></span>
-        <span class="tree-node" style="padding-left:48px;"><span class="name">items.py</span>  <span class="comment">/* 数据模型 (JobItem) */</span></span>
-        <span class="tree-node" style="padding-left:48px;"><span class="name">pipelines.py</span>  <span class="comment">/* 去重管线 + JSON 写入管线 */</span></span>
-        <span class="tree-node" style="padding-left:48px;"><span class="name">settings.py</span>  <span class="comment">/* 爬虫设置（延迟、并发、UA 等） */</span></span>
-        <span class="tree-node" style="padding-left:48px;"><span class="name">middlewares.py</span>  <span class="comment">/* 下载器与 Spider 中间件 */</span></span>
-        <span class="tree-node dir" style="padding-left:48px;"><span class="name">spiders/</span></span>
-        <span class="tree-node" style="padding-left:72px;"><span class="name">jobs.py</span>  <span class="comment">/* 核心爬虫（XPath 提取） */</span></span>
-        <span class="tree-node dir" style="padding-left:0;"><span class="name">analysis/</span></span>
-        <span class="tree-node" style="padding-left:24px;"><span class="name">data_analysis.py</span>  <span class="comment">/* 数据加载、清洗、统计分析、5 张图表生成 */</span></span>
-        <span class="tree-node" style="padding-left:24px;"><span class="name">final_clean.py</span>  <span class="comment">/* HTML 实体解码与字段清洗 */</span></span>
-    </div>
-</section>
+        <div class="chart-grid">
+            <figure class="chart-card wide">
+                <div class="chart-media">
+                    <img src="assets/salary_kde_distribution.png" alt="薪资分布核密度估计图" title="点击放大查看">
+                </div>
+                <figcaption class="chart-report">
+                    <div class="chart-report-top">
+                        <span class="chart-number">图 01</span>
+                        <span class="report-label">分析报告</span>
+                    </div>
+                    <h3>学历门槛抬升薪资区间，市场主体仍在 5k-8k</h3>
+                    <p>有效样本 878 条，整体均值约 <strong>7,032 元</strong>、中位数约 <strong>6,750 元</strong>。曲线主体集中在 5,000-8,000 元，说明大众岗位收入差距不大；右侧长尾主要来自管理、技术等高薪岗位，学历要求越高，曲线整体越靠右。</p>
+                </figcaption>
+            </figure>
 
-<footer>
-    <p>58同城招聘数据爬虫与分析系统 middle dot; 个人项目作品集</p>
+            <figure class="chart-card">
+                <div class="chart-media">
+                    <img src="assets/salary_bubble_chart.png" alt="行业薪资分布气泡图" title="点击放大查看">
+                </div>
+                <figcaption class="chart-report">
+                    <div class="chart-report-top">
+                        <span class="chart-number">图 02</span>
+                        <span class="report-label">分析报告</span>
+                    </div>
+                    <h3>大众岗位收入稳定，高薪岗位集中在少数类型</h3>
+                    <p>样本量最大的普工、送餐员等岗位平均薪资约 <strong>6,400-7,500 元</strong>，波动较小；按摩师、销售管理、司机等岗位气泡更高。销售管理岗位气泡明显偏大，说明平均值背后仍有较大的提成与收入差异。</p>
+                </figcaption>
+            </figure>
+
+            <figure class="chart-card">
+                <div class="chart-media">
+                    <img src="assets/experience_salary_ladder.png" alt="经验与学历对应的薪资增长阶梯图" title="点击放大查看">
+                </div>
+                <figcaption class="chart-report">
+                    <div class="chart-report-top">
+                        <span class="chart-number">图 03</span>
+                        <span class="report-label">分析报告</span>
+                    </div>
+                    <h3>学历要求越高，平均薪资的抬升越明显</h3>
+                    <p>样本中有大量岗位不设经验门槛，因此阶梯图主要呈现学历群体的薪资梯度：本科群体的平均薪资明显高于大专，大专又高于不限学历岗位。增长柱表明，从中等学历到本科学历之间出现了较为集中的薪资跃升。</p>
+                </figcaption>
+            </figure>
+
+            <figure class="chart-card">
+                <div class="chart-media">
+                    <img src="assets/location_salary_radar.png" alt="地区薪资特征雷达图" title="点击放大查看">
+                </div>
+                <figcaption class="chart-report">
+                    <div class="chart-report-top">
+                        <span class="chart-number">图 04</span>
+                        <span class="report-label">分析报告</span>
+                    </div>
+                    <h3>地区之间不是简单的高或低，而是形状差异</h3>
+                    <p>图表比较了 25 分位、中位数、75 分位、90 分位和平均值。薪资靠前的地区并不一定在每个分位都领先，有的强在中位数和稳定区间，有的强在 90 分位；评估时应同时看“普遍能拿多少”和“头部能到多少”。</p>
+                </figcaption>
+            </figure>
+
+            <figure class="chart-card">
+                <div class="chart-media">
+                    <img src="assets/salary_boxplot_combined.png" alt="薪资分布箱线图与散点组合图" title="点击放大查看">
+                </div>
+                <figcaption class="chart-report">
+                    <div class="chart-report-top">
+                        <span class="chart-number">图 05</span>
+                        <span class="report-label">分析报告</span>
+                    </div>
+                    <h3>多数岗位集中在中低区间，少数高薪岗位拉长右尾</h3>
+                    <p>箱体与散点把有效样本完整铺开：大部分记录集中在约 <strong>4,000-8,000 元</strong>，箱体上方仍能看到管理、技术、司机等高薪样本。整体标准差约 2,600 元，说明薪资离散主要由少数高薪岗位带来。</p>
+                </figcaption>
+            </figure>
+        </div>
+    </section>
+
+    <section class="section" id="insights" aria-labelledby="insightsTitle">
+        <div class="section-head">
+            <span class="section-no">03</span>
+            <div>
+                <h2 id="insightsTitle">分析发现</h2>
+                <p class="section-desc">从 938 条招聘记录中提炼出的几个明显信号。</p>
+            </div>
+        </div>
+        <div class="insight-grid">
+            <article class="insight-card">
+                <span class="insight-tag">入门岗位</span>
+                <h3>低门槛岗位也有不错回报</h3>
+                <p>外卖配送、网约车、娱乐门店等不限学历经验的岗位，薪资区间并不低于部分办公室职位。</p>
+            </article>
+            <article class="insight-card">
+                <span class="insight-tag">技能岗位</span>
+                <h3>技能带来的溢价很明显</h3>
+                <p>按摩师、美容师、技术工程师等技能型岗位收入显著更高，部分技能溢价可达 50%-100%。</p>
+            </article>
+            <article class="insight-card">
+                <span class="insight-tag">办公室岗位</span>
+                <h3>文职稳定，但薪资上限偏低</h3>
+                <p>行政、客服、文员等岗位薪资区间较窄，福利和稳定性更突出，但收入成长空间有限。</p>
+            </article>
+            <article class="insight-card">
+                <span class="insight-tag">管理技术岗</span>
+                <h3>高薪岗位多来自管理与技术</h3>
+                <p>销售管理、门店经理、技术工程师等岗位代表市场薪资天花板，通常需要多年经验积累。</p>
+            </article>
+            <article class="insight-card">
+                <span class="insight-tag">灵活就业</span>
+                <h3>灵活就业岗位正在增多</h3>
+                <p>居家直播、陪诊、台球助教等新形态岗位持续出现，为不同背景的求职者提供更多选择。</p>
+            </article>
+            <article class="insight-card">
+                <span class="insight-tag">求职提醒</span>
+                <h3>看清薪资构成再作决定</h3>
+                <p>薪资中可能包含绩效与补贴，需要确认保底金额；正规岗位通常不设入职费用。</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="section" id="tech" aria-labelledby="techTitle">
+        <div class="section-head">
+            <span class="section-no">04</span>
+            <div>
+                <h2 id="techTitle">技术方案</h2>
+                <p class="section-desc">模块化的数据采集与处理链路，让每一步都可以单独验证和复用。</p>
+            </div>
+        </div>
+        <div class="tool-row">
+            <span class="tool-pill"><strong>Python 3</strong> 数据处理</span>
+            <span class="tool-pill"><strong>Scrapy</strong> 页面采集</span>
+            <span class="tool-pill"><strong>Pandas</strong> 清洗统计</span>
+            <span class="tool-pill"><strong>NumPy / SciPy</strong> 数值计算</span>
+            <span class="tool-pill"><strong>Matplotlib</strong> 可视化</span>
+            <span class="tool-pill"><strong>JSON Lines</strong> 结构化存储</span>
+        </div>
+        <div class="module-grid">
+            <article class="module-card">
+                <span class="module-index">01</span>
+                <div>
+                    <h3>页面采集与字段抽取</h3>
+                    <code>jobs.py</code>
+                    <p>通过 XPath 提取职位标题、薪资、公司、地区与任职要求，并支持多页面遍历和重复判断。</p>
+                </div>
+            </article>
+            <article class="module-card">
+                <span class="module-index">02</span>
+                <div>
+                    <h3>统一数据模型</h3>
+                    <code>items.py</code>
+                    <p>用一份稳定的字段模型承接采集、清洗与统计，避免不同环节之间出现口径偏差。</p>
+                </div>
+            </article>
+            <article class="module-card">
+                <span class="module-index">03</span>
+                <div>
+                    <h3>清洗与标准化</h3>
+                    <code>final_clean.py</code>
+                    <p>完成 HTML 实体解码、字段修复、薪资范围解析和文本清理，把原始信息转换为可分析表格。</p>
+                </div>
+            </article>
+            <article class="module-card">
+                <span class="module-index">04</span>
+                <div>
+                    <h3>去重与数据存储</h3>
+                    <code>pipelines.py</code>
+                    <p>以标题、薪资、公司、地点组成唯一标识进行去重，并把每条记录以 JSON Lines 形式写入。</p>
+                </div>
+            </article>
+            <article class="module-card">
+                <span class="module-index">05</span>
+                <div>
+                    <h3>统计与数据挖掘</h3>
+                    <code>data_analysis.py</code>
+                    <p>按四个分析维度计算薪资统计量，结合 SciPy 与 Pandas 得到可比较的市场结论。</p>
+                </div>
+            </article>
+            <article class="module-card">
+                <span class="module-index">06</span>
+                <div>
+                    <h3>图表输出</h3>
+                    <code>Matplotlib</code>
+                    <p>输出核密度、气泡、阶梯、雷达、箱线等五类专业图表，形成完整分析报告。</p>
+                </div>
+            </article>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="footer-mark"></div>
+    <p class="footer-name">里脊球</p>
+    <p class="footer-role">Python 数据采集与挖掘案例</p>
+    <small>© 2026 里脊球 · Python 数据采集与挖掘</small>
 </footer>
 
-<div class="lightbox" id="lightbox" onclick="closeLightbox()">
-    <button class="close-btn" onclick="closeLightbox()">&times;</button>
-    <img id="lightbox-img" src="" alt="">
+<div class="lightbox" id="lightbox" aria-hidden="true">
+    <button type="button" aria-label="关闭大图">&times;</button>
+    <img src="" alt="图表放大预览">
 </div>
 
 <script>
-function openLightbox(src) {
-    document.getElementById('lightbox-img').src = src;
-    document.getElementById('lightbox').classList.add('active');
+const navLinks = document.getElementById('navLinks');
+const menuBtn = document.getElementById('menuBtn');
+const menuIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>';
+const closeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>';
+
+function toggleMenu(force) {
+    const open = typeof force === 'boolean' ? force : !navLinks.classList.contains('open');
+    navLinks.classList.toggle('open', open);
+    menuBtn.setAttribute('aria-expanded', String(open));
+    menuBtn.innerHTML = open ? closeIcon : menuIcon;
 }
+
+menuBtn.addEventListener('click', function() {
+    toggleMenu();
+});
+
+navLinks.querySelectorAll('a').forEach(function(link) {
+    link.addEventListener('click', function() {
+        toggleMenu(false);
+    });
+});
+
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = lightbox.querySelector('img');
+const closeBtn = lightbox.querySelector('button');
+
+function openLightbox(src, alt) {
+    lightboxImg.src = src;
+    lightboxImg.alt = alt || '图表放大预览';
+    lightbox.classList.add('open');
+    lightbox.setAttribute('aria-hidden', 'false');
+}
+
 function closeLightbox() {
-    document.getElementById('lightbox').classList.remove('active');
+    lightbox.classList.remove('open');
+    lightbox.setAttribute('aria-hidden', 'true');
+    lightboxImg.src = '';
 }
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeLightbox();
+
+document.querySelectorAll('.chart-card img').forEach(function(img) {
+    img.addEventListener('click', function() {
+        openLightbox(img.currentSrc || img.src, img.alt);
+    });
+});
+
+closeBtn.addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', function(event) {
+    if (event.target === lightbox) closeLightbox();
+});
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeLightbox();
+        toggleMenu(false);
+    }
 });
 </script>
 
